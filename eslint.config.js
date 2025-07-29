@@ -1,83 +1,85 @@
-import js from '@eslint/js';
-import globals from 'globals';
-import reactHooks from 'eslint-plugin-react-hooks';
-import reactRefresh from 'eslint-plugin-react-refresh';
-import importPlugin from 'eslint-plugin-import';
-import tseslint from 'typescript-eslint';
-import prettier from 'eslint-config-prettier';
+import { defineConfig } from 'eslint/config'
+import typescriptEslint from '@typescript-eslint/eslint-plugin'
+import react from 'eslint-plugin-react'
+import reactHooks from 'eslint-plugin-react-hooks'
+import eslintPluginImport from 'eslint-plugin-import'
+import typescriptParser from '@typescript-eslint/parser'
+import prettierPlugin from 'eslint-plugin-prettier'
+import prettierConfig from 'eslint-config-prettier'
 
-export default tseslint.config([
+export default defineConfig([
   {
-    ignores: ['dist/**', 'node_modules/**', '*.config.js'],
-  },
-  {
-    files: ['**/*.{ts,tsx,js,jsx}'],
+    name: 'ai-studio-to-md/base',
+    files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
-      ecmaVersion: 2020,
+      parser: typescriptParser,
+      ecmaVersion: 'latest',
+      sourceType: 'module',
       parserOptions: {
-        sourceType: 'module',
-        ecmaFeatures: { jsx: true },
-        project: ['./tsconfig.json', './tsconfig.app.json'],
+        ecmaFeatures: {
+          jsx: true,
+        },
       },
-      globals: globals.browser,
     },
-    extends: [
-      js.configs.recommended,
-      ...tseslint.configs.recommended,
-      importPlugin.configs.recommended,
-      importPlugin.configs.typescript,
-      reactHooks.configs.recommended,
-      prettier,
-    ],
     plugins: {
+      '@typescript-eslint': typescriptEslint,
+      react: react,
       'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
-      import: importPlugin,
+      import: eslintPluginImport,
+      prettier: prettierPlugin,
     },
     settings: {
       react: {
         version: 'detect',
       },
       'import/resolver': {
-        typescript: {
-          alwaysTryTypes: true,
-          project: ['./tsconfig.json', './tsconfig.app.json'],
-        },
-        node: {
-          extensions: ['.js', '.jsx', '.ts', '.tsx'],
-        },
+        typescript: true,
+        node: true,
       },
-      'import/extensions': ['.js', '.jsx', '.ts', '.tsx'],
     },
     rules: {
-      'react/react-in-jsx-scope': 'off',
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
-      // Import rules for better path alias support
-      'import/no-unresolved': 'error',
-      'import/named': 'error',
-      'import/default': 'error',
-      'import/namespace': 'error',
+      // Base ESLint recommended rules
+      semi: ['error', 'never'], // Modern style - no semicolons
+      'prefer-const': 'error',
+      'no-unused-vars': 'off', // Disabled in favor of TypeScript version
+
+      // TypeScript rules
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+
+      // React rules
+      'react/react-in-jsx-scope': 'off', // Not needed with React 17+
+      'react/prop-types': 'off', // Using TypeScript for prop validation
+      'react/jsx-uses-react': 'error',
+      'react/jsx-uses-vars': 'error',
+      'react/jsx-key': 'error', // Important for lists
+
+      // React Hooks rules
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+
+      // Import rules
       'import/order': [
-        'error',
+        'warn',
         {
-          groups: [
-            'builtin',
-            'external',
-            'internal',
-            'parent',
-            'sibling',
-            'index',
-          ],
           'newlines-between': 'always',
-          alphabetize: {
-            order: 'asc',
-            caseInsensitive: true,
-          },
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
         },
       ],
+      'import/no-unresolved': 'warn', // Less strict - Vite handles resolution
+      'import/no-duplicates': 'error',
+
+      // Prettier integration
+      'prettier/prettier': 'error',
+
+      // Disable formatting rules that conflict with Prettier
+      ...prettierConfig.rules,
     },
   },
-]);
+  {
+    name: 'ai-studio-to-md/ignores',
+    ignores: ['dist/**', 'build/**', 'node_modules/**', '*.config.js', '*.config.ts', '!eslint.config.*'],
+  },
+])
