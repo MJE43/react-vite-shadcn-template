@@ -54,5 +54,4 @@ coverage/
 .vercel
 .netlify
 
-# Template setup (remove after setup)
-setup-project.js
+
