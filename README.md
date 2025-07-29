@@ -1,8 +1,4 @@
-<!--
-  This is a project template! The title, description, and other fields below
-  will be automatically filled in when you run `node setup-project.js`.
-  To use this template, click "Use this template" on GitHub and follow the README instructions.
--->
+> **ℹ️ This is a project template. The title, description, and other fields below will be replaced when you create a new project from this template.**
 
 # {{project_title}}
 
