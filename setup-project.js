@@ -72,11 +72,28 @@ VITE_APP_DESCRIPTION=${replacements['{{project_description}}']}
   }
 }
 
+function deleteGitkeepFiles(dir) {
+  try {
+    const files = fs.readdirSync(dir)
+    for (const file of files) {
+      const fullPath = path.join(dir, file)
+      if (fs.statSync(fullPath).isDirectory()) {
+        deleteGitkeepFiles(fullPath)
+      } else if (file === '.gitkeep') {
+        fs.unlinkSync(fullPath)
+        console.log(`🗑️  Deleted ${fullPath}`)
+      }
+    }
+  } catch (error) {
+    console.log('⚠️  Could not delete .gitkeep files:', error.message)
+  }
+}
+
 async function setupProject() {
   console.log('🚀 Welcome to the Project Template Setup!\n')
   console.log('This will customize your project with your information.\n')
 
-  let projectName, projectDescription, authorName, authorEmail
+  let projectName, projectDescription, authorName
 
   // Gather and validate project information
   do {
@@ -91,7 +108,7 @@ async function setupProject() {
     authorName = await question('👤 Author name: ')
   } while (!validateInput(authorName, 'Author name'))
 
-  authorEmail = await question('📧 Author email (optional): ')
+  const authorEmail = await question('📧 Author email (optional): ')
 
   // Create replacements object
   const replacements = {
@@ -119,6 +136,32 @@ async function setupProject() {
   // Create .env.example
   createEnvExample(replacements)
 
+  // Delete .gitkeep files
+  console.log('\n🧹 Cleaning up template files...')
+  deleteGitkeepFiles(__dirname)
+
+  // Install dependencies
+  console.log('\n📦 Installing dependencies...')
+  try {
+    const { execSync } = await import('child_process')
+    execSync('pnpm install', { stdio: 'inherit' })
+    console.log('✅ Dependencies installed')
+  } catch (error) {
+    console.log('⚠️  Could not install dependencies:', error.message)
+    console.log('💡 You can run "pnpm install" manually later')
+  }
+
+  // Initialize shadcn/ui
+  console.log('\n🎨 Initializing shadcn/ui...')
+  try {
+    const { execSync } = await import('child_process')
+    execSync('pnpm dlx shadcn@latest init', { stdio: 'inherit' })
+    console.log('✅ shadcn/ui initialized')
+  } catch (error) {
+    console.log('⚠️  Could not initialize shadcn/ui:', error.message)
+    console.log('💡 You can run "pnpm dlx shadcn@latest init" manually later')
+  }
+
   // Create initial git commit
   const shouldGitInit = await question('\n🔧 Initialize git repository? (y/N): ')
   if (shouldGitInit.toLowerCase() === 'y' || shouldGitInit.toLowerCase() === 'yes') {
@@ -143,9 +186,8 @@ async function setupProject() {
 
   console.log('\n🎉 Project setup complete!')
   console.log('\nNext steps:')
-  console.log('1. Run: pnpm install')
-  console.log('2. Run: pnpm dev')
-  console.log('3. Start building your amazing project!')
+  console.log('1. Run: pnpm dev')
+  console.log('2. Start building your amazing project!')
   console.log('\n💡 Add shadcn/ui components with: npx shadcn@latest add [component-name]')
 
   rl.close()
